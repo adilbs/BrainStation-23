@@ -2,7 +2,7 @@
  include_once 'database.php';
  include_once 'category.php';
 
- // get database connection
+
  $database = new Database();
  $db = $database->getConnection();
  $category = new Category($db);
@@ -11,7 +11,6 @@ $categories = $category->getCategoryItems();
 
 $rows =$categories->fetchAll(PDO::FETCH_ASSOC);
 
-// var_dump($rows);
 
  ?>
 

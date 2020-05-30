@@ -1,11 +1,9 @@
 <?php
 class Category{
  
-    // database connection and table name
     private $conn;
     private $table_name = "category";
  
-    // object properties
     public $id;
     public $name;
     public $number;

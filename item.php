@@ -1,7 +1,6 @@
 <?php
 class Item{
- 
-    // database connection and table name
+  // database connection and table name
     private $conn;
     private $table_name = "item";
  
