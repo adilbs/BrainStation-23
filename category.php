@@ -1,19 +1,64 @@
 <?php
+
 class Category{
  
+    // database connection and table name
     private $conn;
     private $table_name = "category";
  
+    // object properties
     public $id;
     public $name;
     public $number;
-    public $systemKey;
+    public $systemkey;
     public $note;
     public $priority;
-    public $disabled;
+    public $diabled;
+
+
  
     public function __construct($db){
         $this->conn = $db;
+    }
+ 
+    public function getadjacencylist(){
+
+        $query = "
+        SELECT categoryId as id ,catetory_relations.ParentcategoryId as parent
+        FROM catetory_relations 
+        
+        ";
+        $stmt = $this->conn->prepare( $query );
+        $stmt->execute();
+
+        return $stmt;
+    }
+    
+    public function getchild($id){
+
+        $query = "
+        SELECT categoryId as id
+FROM catetory_relations
+WHERE catetory_relations.ParentcategoryId=$id
+        ";
+        $stmt = $this->conn->prepare( $query );
+        $stmt->execute();
+
+        return $stmt;
+    }
+
+    public function getitemcount($id){
+
+        $query = "
+        SELECT  count(item_category_relations.ItemNumber) as item_count
+FROM item_category_relations
+WHERE item_category_relations.categoryId =$id
+group BY item_category_relations.categoryId
+        ";
+        $stmt = $this->conn->prepare( $query );
+        $stmt->execute();
+
+        return $stmt;
     }
 
     public function getCategoryItems(){
@@ -44,21 +89,19 @@ class Category{
         return $stmt;
 
     }
+    public function getname($id){
 
-    public function getCategoryChildren($catId){
-
-        $query = "
-        select categoryId from catetory_relations where catetory_relations.ParentcategoryId=$catId;
+$query = "
+        select Name from category where category.Id = $id
         ";
 
+            
         $stmt = $this->conn->prepare( $query );
         $stmt->execute();
      
         return $stmt;
-    
     }
- 
-   
-}
-?>
 
+}
+
+?>

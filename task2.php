@@ -1,72 +1,64 @@
 <?php
- include_once 'database.php';
- include_once 'item.php';
+include_once 'database.php';
+include_once 'category.php';
 
- // get database connection
- $database = new Database();
- $db = $database->getConnection();
+// instantiate database and product object
+$database = new Database();
+$db = $database->getConnection();
+ 
+$category = new Category($db);
+
+$data  = $category->getadjacencylist();
 
 
-function getName($db,$Id){
+$ddata = $data->fetchAll(PDO::FETCH_ASSOC);
 
- $query = "
- SELECT Name FROM `category` WHERE Id=$Id;
- ";
+// var_dump($ddata);
 
- $stmt = $db->prepare( $query );
-$stmt->execute();
 
-$name = $stmt->fetchAll(PDO::FETCH_ASSOC);
+function makeList($category, $par_id = 0) {
+    //your sql code here
+    $dbch = $category->getchild($par_id);
+    $pages = $dbch->fetchAll();
 
-return $name[0]['Name'];
+    // var_dump($pages);
+    if (count($pages)) {
+        echo '<ul>';
+        foreach ($pages as $page) {
 
+            $cnt = $category->getitemcount((int)$page['id'] )->fetchAll(PDO::FETCH_ASSOC);
+            if (count($cnt)){
+                // echo '<li>', $page['id'], '('. $cnt[0]['item_count'] . ')';
+                echo '<li>', ($category->getname((int)$page['id'])->fetchAll(PDO::FETCH_ASSOC))[0]['Name'], '('. $cnt[0]['item_count'] . ')';
+            }else{
+                
+                // echo '<li>', $page['id'];
+                echo '<li>', ($category->getname((int)$page['id'])->fetchAll(PDO::FETCH_ASSOC))[0]['Name'];
+            }
+
+            makeList($category,$page['id']);
+            echo '</li>';
+        }
+        echo '</ul>';
+    }
 }
 
-$query = "
-select t1.ParentcategoryId as lev1, t1.categoryId as lev2, t2.categoryId as lev3,t3.categoryId as lev4, cat, total
-            from catetory_relations as t1 
-            left join catetory_relations as t2 on t1.categoryId = t2.ParentcategoryId
-            left join catetory_relations as t3 on t2.categoryId = t3.ParentcategoryId
-            left join catetory_relations as t4 on t3.categoryId = t4.ParentcategoryId
-           
-            
-            LEFT join (SELECT categoryId as cat, count(ItemNumber) as total 
-            FROM Item_category_relations group by categoryId)
-            as test
-            on t4.categoryId = test.cat 
-            OR t3.categoryId = test.cat OR t2.categoryId = test.cat OR t1.categoryId = test.cat
-            OR t1.ParentcategoryId = test.cat where t1.ParentcategoryId in 
-            (SELECT Id FROM category where Id not in (Select categoryId from catetory_relations))
-            order by lev1,lev2,lev3,lev4
-";
+echo '<ul>';
+    echo '<li> '.($category->getname(1)->fetchAll(PDO::FETCH_ASSOC))[0]['Name']. '</li>';
+makeList($category,1);
+echo '</ul>';
 
-$stmt = $db->prepare( $query );
-$stmt->execute();
+echo '<ul>';
+    echo '<li> '.($category->getname(2)->fetchAll(PDO::FETCH_ASSOC))[0]['Name']. '</li>';
+makeList($category,2);
+echo '</ul>';
+echo '<ul>';
+    echo '<li> '.($category->getname(3)->fetchAll(PDO::FETCH_ASSOC))[0]['Name']. '</li>';
+makeList($category,3);
+echo '</ul>';
+echo '<ul>';
+    echo '<li> '.($category->getname(4)->fetchAll(PDO::FETCH_ASSOC))[0]['Name']. '</li>';
+makeList($category,4);
+echo '</ul>';
 
-$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
- ?>
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-</head>
-<body>
-<div class="container">
-
-<?php foreach($data as $d): ?>
-
-<ul class="list-inline"><?php print_r( getName($db, (int)$d['lev1']));?>
-<li><?php print_r( getName($db, (int)$d['lev2']));?></li>
-<li><?php print_r( getName($db, (int)$d['lev3']));?></li>
-
-</ul>
-    <?php endforeach; ?>
-</div>
-</body>
-</html>
+?>
